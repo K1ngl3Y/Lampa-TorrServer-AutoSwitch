@@ -38,7 +38,7 @@
     var isLastCheckUnavailableAll = false;
 
     var T = i18n[userLang];
-    
+
     function log(msg) {
         console.log(`[${PLUGIN_ID}] ${msg}`);
     }
@@ -53,9 +53,27 @@
     }
     
     function checkServer(url) {
-        return fetch(url, { method: 'HEAD', mode: 'no-cors' })
-            .then(() => true)
-            .catch(() => false);
+        var controller = new AbortController();
+        var signal = controller.signal;
+    
+        var checkServerTimeoutId = setTimeout(() => {
+            controller.abort();
+        }, 5000);
+    
+        return fetch(url, {
+            method: 'HEAD',
+            mode: 'no-cors',
+            cache: 'no-store',
+            signal: signal
+        })
+        .then(() => {
+            clearTimeout(checkServerTimeoutId);
+            return true;
+        })
+        .catch(() => {
+            clearTimeout(checkServerTimeoutId);
+            return false;
+        });
     }
     
     function switchTorrserver() {
